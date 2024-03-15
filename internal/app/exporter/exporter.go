@@ -47,7 +47,7 @@ type metrics struct {
 	CloudWatchUsage     cloudwatch.UsageMetrics
 }
 
-type rdsCollector struct {
+type RdsCollector struct {
 	wg            sync.WaitGroup
 	logger        slog.Logger
 	counters      counters
@@ -111,8 +111,8 @@ type rdsCollector struct {
 	AuroraBinlogReplicaLag      *prometheus.Desc
 }
 
-func NewCollector(logger slog.Logger, collectorConfiguration Configuration, awsAccountID string, awsRegion string, rdsClient rdsClient, ec2Client EC2Client, cloudWatchClient cloudWatchClient, servicequotasClient servicequotasClient) *rdsCollector {
-	return &rdsCollector{
+func NewCollector(logger slog.Logger, collectorConfiguration Configuration, awsAccountID string, awsRegion string, rdsClient rdsClient, ec2Client EC2Client, cloudWatchClient cloudWatchClient, servicequotasClient servicequotasClient) *RdsCollector {
+	return &RdsCollector{
 		logger:              logger,
 		awsAccountID:        awsAccountID,
 		awsRegion:           awsRegion,
@@ -318,7 +318,7 @@ func NewCollector(logger slog.Logger, collectorConfiguration Configuration, awsA
 	}
 }
 
-func (c *rdsCollector) Describe(ch chan<- *prometheus.Desc) {
+func (c *RdsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- c.DBLoad
 	ch <- c.age
 	ch <- c.allocatedStorage
@@ -370,7 +370,7 @@ func (c *rdsCollector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 // getMetrics collects and return all RDS metrics
-func (c *rdsCollector) fetchMetrics() error {
+func (c *RdsCollector) fetchMetrics() error {
 	c.logger.Debug("received query")
 
 	// Fetch serviceQuotas metrics
@@ -423,7 +423,7 @@ func (c *rdsCollector) fetchMetrics() error {
 	return nil
 }
 
-func (c *rdsCollector) getCloudwatchMetrics(client cloudwatch.CloudWatchClient, instanceIdentifiers []string) {
+func (c *RdsCollector) getCloudwatchMetrics(client cloudwatch.CloudWatchClient, instanceIdentifiers []string) {
 	defer c.wg.Done()
 	c.logger.Debug("fetch cloudwatch metrics")
 
@@ -440,7 +440,7 @@ func (c *rdsCollector) getCloudwatchMetrics(client cloudwatch.CloudWatchClient, 
 	c.logger.Debug("cloudwatch metrics fetched", "metrics", metrics)
 }
 
-func (c *rdsCollector) getUsagesMetrics(client cloudwatch.CloudWatchClient) {
+func (c *RdsCollector) getUsagesMetrics(client cloudwatch.CloudWatchClient) {
 	defer c.wg.Done()
 	c.logger.Debug("fetch usage metrics")
 
@@ -458,7 +458,7 @@ func (c *rdsCollector) getUsagesMetrics(client cloudwatch.CloudWatchClient) {
 	c.logger.Debug("usage metrics fetched", "metrics", metrics)
 }
 
-func (c *rdsCollector) getEC2Metrics(client ec2.EC2Client, instanceTypes []string) {
+func (c *RdsCollector) getEC2Metrics(client ec2.EC2Client, instanceTypes []string) {
 	defer c.wg.Done()
 	c.logger.Debug("fetch EC2 metrics")
 
@@ -476,7 +476,7 @@ func (c *rdsCollector) getEC2Metrics(client ec2.EC2Client, instanceTypes []strin
 	c.logger.Debug("EC2 metrics fetched", "metrics", metrics)
 }
 
-func (c *rdsCollector) getQuotasMetrics(client servicequotas.ServiceQuotasClient) {
+func (c *RdsCollector) getQuotasMetrics(client servicequotas.ServiceQuotasClient) {
 	defer c.wg.Done()
 	c.logger.Debug("fetch quotas")
 
@@ -492,7 +492,7 @@ func (c *rdsCollector) getQuotasMetrics(client servicequotas.ServiceQuotasClient
 	c.metrics.ServiceQuota = metrics
 }
 
-func (c *rdsCollector) getInstanceTagLabels(dbidentifier string, instance rds.RdsInstanceMetrics) (keys []string, values []string) {
+func (c *RdsCollector) getInstanceTagLabels(dbidentifier string, instance rds.RdsInstanceMetrics) (keys []string, values []string) {
 	labels := map[string]string{
 		"aws_account_id": c.awsAccountID,
 		"aws_region":     c.awsRegion,
@@ -514,7 +514,7 @@ func (c *rdsCollector) getInstanceTagLabels(dbidentifier string, instance rds.Rd
 	return keys, values
 }
 
-func (c *rdsCollector) Collect(ch chan<- prometheus.Metric) {
+func (c *RdsCollector) Collect(ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(c.exporterBuildInformation, prometheus.GaugeValue, 1, build.Version, build.CommitSHA, build.Date)
 	ch <- prometheus.MustNewConstMetric(c.errors, prometheus.CounterValue, c.counters.Errors)
 
@@ -709,10 +709,10 @@ func (c *rdsCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 }
 
-func (c *rdsCollector) GetStatistics() counters {
+func (c *RdsCollector) GetStatistics() counters {
 	return c.counters
 }
 
-func (c *rdsCollector) GetMetrics() metrics {
+func (c *RdsCollector) GetMetrics() metrics {
 	return c.metrics
 }
