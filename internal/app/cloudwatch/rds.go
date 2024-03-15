@@ -43,6 +43,13 @@ type RdsMetrics struct {
 	TransactionLogsDiskUsage  *float64
 	WriteIOPS                 *float64
 	WriteThroughput           *float64
+	BufferCacheHitRatio       *float64
+	Deadlocks                 *float64
+	Queries                   *float64
+	EngineUptime              *float64
+	SumBinaryLogSize          *float64
+	NumBinaryLogFiles         *float64
+	AuroraBinlogReplicaLag    *float64
 }
 
 func (m *RdsMetrics) Update(field string, value float64) error {
@@ -79,6 +86,20 @@ func (m *RdsMetrics) Update(field string, value float64) error {
 		m.WriteThroughput = &value
 	case "TransactionLogsDiskUsage":
 		m.TransactionLogsDiskUsage = &value
+	case "BufferCacheHitRatio":
+		m.BufferCacheHitRatio = &value
+	case "Deadlocks":
+		m.Deadlocks = &value
+	case "Queries":
+		m.Queries = &value
+	case "EngineUptime":
+		m.EngineUptime = &value
+	case "SumBinaryLogSize":
+		m.SumBinaryLogSize = &value
+	case "NumBinaryLogFiles":
+		m.NumBinaryLogFiles = &value
+	case "AuroraBinlogReplicaLag":
+		m.AuroraBinlogReplicaLag = &value
 	default:
 		return fmt.Errorf("can't process '%s' metrics: %w", field, errUnknownMetric)
 	}

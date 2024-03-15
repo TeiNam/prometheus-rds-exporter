@@ -102,6 +102,13 @@ type rdsCollector struct {
 	transactionLogsDiskUsage    *prometheus.Desc
 	certificateValidTill        *prometheus.Desc
 	age                         *prometheus.Desc
+	BufferCacheHitRatio         *prometheus.Desc
+	Deadlocks                   *prometheus.Desc
+	Queries                     *prometheus.Desc
+	EngineUptime                *prometheus.Desc
+	SumBinaryLogSize            *prometheus.Desc
+	NumBinaryLogFiles           *prometheus.Desc
+	AuroraBinlogReplicaLag      *prometheus.Desc
 }
 
 func NewCollector(logger slog.Logger, collectorConfiguration Configuration, awsAccountID string, awsRegion string, rdsClient rdsClient, ec2Client EC2Client, cloudWatchClient cloudWatchClient, servicequotasClient servicequotasClient) *rdsCollector {
@@ -280,6 +287,34 @@ func NewCollector(logger slog.Logger, collectorConfiguration Configuration, awsA
 			"Manual snapshots count",
 			[]string{"aws_account_id", "aws_region"}, nil,
 		),
+		BufferCacheHitRatio: prometheus.NewDesc("rds_buffer_cache_hit_ratio",
+			"The percentage of requests that are served by the buffer cache",
+			[]string{"aws_account_id", "aws_region", "dbidentifier"}, nil,
+		),
+		Deadlocks: prometheus.NewDesc("rds_deadlocks",
+			"The number of deadlocks in the database",
+			[]string{"aws_account_id", "aws_region", "dbidentifier"}, nil,
+		),
+		Queries: prometheus.NewDesc("rds_queries",
+			"The average number of queries executed per second",
+			[]string{"aws_account_id", "aws_region", "dbidentifier"}, nil,
+		),
+		EngineUptime: prometheus.NewDesc("rds_engine_uptime_seconds",
+			"The amount of time that the RDS instance has been running",
+			[]string{"aws_account_id", "aws_region", "dbidentifier"}, nil,
+		),
+		SumBinaryLogSize: prometheus.NewDesc("rds_sum_binary_log_size_bytes",
+			"The total size of all binary logs on the master",
+			[]string{"aws_account_id", "aws_region", "dbidentifier"}, nil,
+		),
+		NumBinaryLogFiles: prometheus.NewDesc("rds_num_binary_log_files",
+			"The number of binary log files on the master",
+			[]string{"aws_account_id", "aws_region", "dbidentifier"}, nil,
+		),
+		AuroraBinlogReplicaLag: prometheus.NewDesc("rds_aurora_binlog_replica_lag_seconds",
+			"The amount of time a replica Aurora DB cluster lags behind the source DB cluster",
+			[]string{"aws_account_id", "aws_region", "dbidentifier"}, nil,
+		),
 	}
 }
 
@@ -325,6 +360,13 @@ func (c *rdsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- c.usageManualSnapshots
 	ch <- c.writeIOPS
 	ch <- c.writeThroughput
+	ch <- c.BufferCacheHitRatio
+	ch <- c.Deadlocks
+	ch <- c.Queries
+	ch <- c.EngineUptime
+	ch <- c.SumBinaryLogSize
+	ch <- c.NumBinaryLogFiles
+	ch <- c.AuroraBinlogReplicaLag
 }
 
 // getMetrics collects and return all RDS metrics
@@ -610,6 +652,34 @@ func (c *rdsCollector) Collect(ch chan<- prometheus.Metric) {
 
 		if instance.DBLoadNonCPU != nil {
 			ch <- prometheus.MustNewConstMetric(c.dBLoadNonCPU, prometheus.GaugeValue, *instance.DBLoadNonCPU, c.awsAccountID, c.awsRegion, dbidentifier)
+		}
+
+		if instance.BufferCacheHitRatio != nil {
+			ch <- prometheus.MustNewConstMetric(c.BufferCacheHitRatio, prometheus.GaugeValue, *instance.BufferCacheHitRatio, c.awsAccountID, c.awsRegion, dbidentifier)
+		}
+
+		if instance.Deadlocks != nil {
+			ch <- prometheus.MustNewConstMetric(c.Deadlocks, prometheus.GaugeValue, *instance.Deadlocks, c.awsAccountID, c.awsRegion, dbidentifier)
+		}
+
+		if instance.Queries != nil {
+			ch <- prometheus.MustNewConstMetric(c.Queries, prometheus.GaugeValue, *instance.Queries, c.awsAccountID, c.awsRegion, dbidentifier)
+		}
+
+		if instance.EngineUptime != nil {
+			ch <- prometheus.MustNewConstMetric(c.EngineUptime, prometheus.GaugeValue, *instance.EngineUptime, c.awsAccountID, c.awsRegion, dbidentifier)
+		}
+
+		if instance.SumBinaryLogSize != nil {
+			ch <- prometheus.MustNewConstMetric(c.SumBinaryLogSize, prometheus.GaugeValue, *instance.SumBinaryLogSize, c.awsAccountID, c.awsRegion, dbidentifier)
+		}
+
+		if instance.NumBinaryLogFiles != nil {
+			ch <- prometheus.MustNewConstMetric(c.NumBinaryLogFiles, prometheus.GaugeValue, *instance.NumBinaryLogFiles, c.awsAccountID, c.awsRegion, dbidentifier)
+		}
+
+		if instance.AuroraBinlogReplicaLag != nil {
+			ch <- prometheus.MustNewConstMetric(c.AuroraBinlogReplicaLag, prometheus.GaugeValue, *instance.AuroraBinlogReplicaLag, c.awsAccountID, c.awsRegion, dbidentifier)
 		}
 	}
 
