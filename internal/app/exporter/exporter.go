@@ -30,7 +30,7 @@ type Configuration struct {
 	CollectUsages          bool
 }
 
-type counters struct {
+type Counters struct {
 	CloudwatchAPICalls    float64
 	EC2APIcalls           float64
 	Errors                float64
@@ -50,7 +50,7 @@ type metrics struct {
 type RdsCollector struct {
 	wg            sync.WaitGroup
 	logger        slog.Logger
-	counters      counters
+	counters      Counters
 	metrics       metrics
 	awsAccountID  string
 	awsRegion     string
@@ -709,7 +709,7 @@ func (c *RdsCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 }
 
-func (c *RdsCollector) GetStatistics() counters {
+func (c *RdsCollector) GetStatistics() Counters {
 	return c.counters
 }
 
