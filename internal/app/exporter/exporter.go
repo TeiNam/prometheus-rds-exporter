@@ -317,7 +317,7 @@ func NewCollector(logger slog.Logger, collectorConfiguration Configuration, awsA
 			[]string{"aws_account_id", "aws_region", "dbidentifier"}, nil,
 		),
 		BinLogDiskUsage: prometheus.NewDesc("rds_binlog_disk_usage_bytes",
-			"The amount of time a replica Aurora DB cluster lags behind the source DB cluster",
+			"binary log disk usage",
 			[]string{"aws_account_id", "aws_region", "dbidentifier"}, nil,
 		),
 	}
