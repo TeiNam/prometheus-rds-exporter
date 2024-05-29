@@ -109,6 +109,7 @@ type RdsCollector struct {
 	SumBinaryLogSize            *prometheus.Desc
 	NumBinaryLogFiles           *prometheus.Desc
 	AuroraBinlogReplicaLag      *prometheus.Desc
+	BinLogDiskUsage             *prometheus.Desc
 }
 
 func NewCollector(logger slog.Logger, collectorConfiguration Configuration, awsAccountID string, awsRegion string, rdsClient rdsClient, ec2Client EC2Client, cloudWatchClient cloudWatchClient, servicequotasClient servicequotasClient) *RdsCollector {
@@ -315,6 +316,10 @@ func NewCollector(logger slog.Logger, collectorConfiguration Configuration, awsA
 			"The amount of time a replica Aurora DB cluster lags behind the source DB cluster",
 			[]string{"aws_account_id", "aws_region", "dbidentifier"}, nil,
 		),
+		BinLogDiskUsage: prometheus.NewDesc("rds_binlog_disk_usage_bytes",
+			"The amount of time a replica Aurora DB cluster lags behind the source DB cluster",
+			[]string{"aws_account_id", "aws_region", "dbidentifier"}, nil,
+		),
 	}
 }
 
@@ -367,6 +372,7 @@ func (c *RdsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- c.SumBinaryLogSize
 	ch <- c.NumBinaryLogFiles
 	ch <- c.AuroraBinlogReplicaLag
+	ch <- c.BinLogDiskUsage
 }
 
 // getMetrics collects and return all RDS metrics
@@ -680,6 +686,10 @@ func (c *RdsCollector) Collect(ch chan<- prometheus.Metric) {
 
 		if instance.AuroraBinlogReplicaLag != nil {
 			ch <- prometheus.MustNewConstMetric(c.AuroraBinlogReplicaLag, prometheus.GaugeValue, *instance.AuroraBinlogReplicaLag, c.awsAccountID, c.awsRegion, dbidentifier)
+		}
+
+		if instance.BinLogDiskUsage != nil {
+			ch <- prometheus.MustNewConstMetric(c.BinLogDiskUsage, prometheus.GaugeValue, *instance.BinLogDiskUsage, c.awsAccountID, c.awsRegion, dbidentifier)
 		}
 	}
 

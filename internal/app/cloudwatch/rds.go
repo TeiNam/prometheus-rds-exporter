@@ -50,6 +50,7 @@ type RdsMetrics struct {
 	SumBinaryLogSize          *float64
 	NumBinaryLogFiles         *float64
 	AuroraBinlogReplicaLag    *float64
+	BinLogDiskUsage           *float64
 }
 
 func (m *RdsMetrics) Update(field string, value float64) error {
@@ -100,6 +101,8 @@ func (m *RdsMetrics) Update(field string, value float64) error {
 		m.NumBinaryLogFiles = &value
 	case "AuroraBinlogReplicaLag":
 		m.AuroraBinlogReplicaLag = &value
+	case "BinLogDiskUsage":
+		m.BinLogDiskUsage = &value
 	default:
 		return fmt.Errorf("can't process '%s' metrics: %w", field, errUnknownMetric)
 	}
@@ -108,8 +111,8 @@ func (m *RdsMetrics) Update(field string, value float64) error {
 }
 
 // getCloudWatchMetricsName returns names of Cloudwatch metrics to collect
-func getCloudWatchMetricsName() [23]string {
-	return [23]string{
+func getCloudWatchMetricsName() [24]string {
+	return [24]string{
 		"CPUUtilization",
 		"DBLoad",
 		"DBLoadCPU",
@@ -133,6 +136,7 @@ func getCloudWatchMetricsName() [23]string {
 		"SumBinaryLogSize",
 		"NumBinaryLogFiles",
 		"AuroraBinlogReplicaLag",
+		"BinLogDiskUsage",
 	}
 }
 
