@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
+	converter "github.com/TeiNam/prometheus-rds-exporter/internal/app/unit"
 	aws_ec2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	aws_ec2_types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	converter "github.com/qonto/prometheus-rds-exporter/internal/app/unit"
 )
 
 const (

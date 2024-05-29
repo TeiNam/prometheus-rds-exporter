@@ -1,6 +1,6 @@
 package main
 
-import "github.com/qonto/prometheus-rds-exporter/cmd"
+import "github.com/TeiNam/prometheus-rds-exporter/cmd"
 
 func main() {
 	cmd.Execute()

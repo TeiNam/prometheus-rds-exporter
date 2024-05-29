@@ -4,7 +4,7 @@ This document explains how to update Grafana dashboards on Grafana.com.
 
 Requirements:
 
-- Member of Qonto's organization on Grafana.com
+- Member of TeiNam's organization on Grafana.com
 
 Steps:
 
@@ -39,7 +39,7 @@ Steps:
 
 1. Upload dashboard on Grafana.com
 
-    1. Go to the Grafana.com dashboard public page (see [list](https://github.com/qonto/prometheus-rds-exporter#dashboards)), select revisions and click on `Upload revision`
+    1. Go to the Grafana.com dashboard public page (see [list](https://github.com/TeiNam/prometheus-rds-exporter#dashboards)), select revisions and click on `Upload revision`
 
     1. Select `export.json` and click on `Upload new revision`
 

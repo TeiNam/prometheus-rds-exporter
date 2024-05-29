@@ -4,9 +4,9 @@ package mocks
 import (
 	"context"
 
+	"github.com/TeiNam/prometheus-rds-exporter/internal/app/servicequotas"
 	aws_servicequotas "github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	aws_servicequotas_types "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
-	"github.com/qonto/prometheus-rds-exporter/internal/app/servicequotas"
 )
 
 // Defines expected values for the mock and tests

@@ -14,7 +14,7 @@ It collects key metrics about:
 - RDS quota usage information
 
 > [!TIP]
-> Prometheus RDS exporter is part of the [Database Monitoring Framework](https://github.com/qonto/database-monitoring-framework) which provides alerts, along with their handy runbooks for AWS RDS.
+> Prometheus RDS exporter is part of the [Database Monitoring Framework](https://github.com/TeiNam/database-monitoring-framework) which provides alerts, along with their handy runbooks for AWS RDS.
 
 ## Key metrics
 
@@ -146,7 +146,7 @@ Grafana dashboards are available on Grafana labs:
 
 ## Configuration
 
-Configuration could be defined in [prometheus-rds-exporter.yaml](https://github.com/qonto/prometheus-rds-exporter/blob/main/configs/prometheus-rds-exporter/prometheus-rds-exporter.yaml) or environment variables (format `PROMETHEUS_RDS_EXPORTER_<PARAMETER_NAME>`).
+Configuration could be defined in [prometheus-rds-exporter.yaml](https://github.com/TeiNam/prometheus-rds-exporter/blob/main/configs/prometheus-rds-exporter/prometheus-rds-exporter.yaml) or environment variables (format `PROMETHEUS_RDS_EXPORTER_<PARAMETER_NAME>`).
 
 | Parameter | Description | Default |
 | --- | --- | --- |
@@ -250,7 +250,7 @@ curl \
 --fail \
 --silent \
 --write-out "Reponse code: %{response_code}\n" \
-https://raw.githubusercontent.com/qonto/prometheus-rds-exporter/main/configs/aws/policy.json \
+https://raw.githubusercontent.com/TeiNam/prometheus-rds-exporter/main/configs/aws/policy.json \
 -o /tmp/prometheus-rds-exporter.policy.json
 ```
 
@@ -272,7 +272,7 @@ See the [Development environment](#development-environment) to start the Prometh
     IAM_POLICY_NAME=prometheus-rds-exporter
 
     # Download policy payload
-    curl --fail --silent --write-out "Reponse code: %{response_code}\n" https://raw.githubusercontent.com/qonto/prometheus-rds-exporter/main/configs/aws/policy.json -o /tmp/prometheus-rds-exporter.policy.json
+    curl --fail --silent --write-out "Reponse code: %{response_code}\n" https://raw.githubusercontent.com/TeiNam/prometheus-rds-exporter/main/configs/aws/policy.json -o /tmp/prometheus-rds-exporter.policy.json
 
     # Create IAM policy
     aws iam create-policy --policy-name ${IAM_POLICY_NAME} --policy-document file:///tmp/prometheus-rds-exporter.policy.json
@@ -308,7 +308,7 @@ See the [Development environment](#development-environment) to start the Prometh
 
     helm upgrade \
     prometheus-rds-exporter \
-    oci://public.ecr.aws/qonto/prometheus-rds-exporter-chart \
+    oci://public.ecr.aws/TeiNam/prometheus-rds-exporter-chart \
     --version ${PROMETHEUS_RDS_EXPORTER_VERSION} \
     --install \
     --namespace ${KUBERNETES_NAMESPACE} \
@@ -320,7 +320,7 @@ See the [Development environment](#development-environment) to start the Prometh
     Download Helm chart default values
 
     ```bash
-    helm show values oci://public.ecr.aws/qonto/prometheus-rds-exporter-chart --version ${PROMETHEUS_RDS_EXPORTER_VERSION} > values.yaml
+    helm show values oci://public.ecr.aws/TeiNam/prometheus-rds-exporter-chart --version ${PROMETHEUS_RDS_EXPORTER_VERSION} > values.yaml
     ```
 
     Customize settings
@@ -343,7 +343,7 @@ See the [Development environment](#development-environment) to start the Prometh
     ```bash
     helm upgrade \
     prometheus-rds-exporter \
-    oci://public.ecr.aws/qonto/prometheus-rds-exporter-chart \
+    oci://public.ecr.aws/TeiNam/prometheus-rds-exporter-chart \
     --version ${PROMETHEUS_RDS_EXPORTER_VERSION} \
     --install \
     --namespace ${KUBERNETES_NAMESPACE} \
@@ -385,7 +385,7 @@ See the [Development environment](#development-environment) to start the Prometh
         IAM_POLICY_NAME=prometheus-rds-exporter
 
         # Download Prometheus RDS exporter required IAM permissions
-        curl --fail --silent --write-out "Reponse code: %{response_code}\n" https://raw.githubusercontent.com/qonto/prometheus-rds-exporter/main/configs/aws/policy.json -o prometheus-rds-exporter.policy.json
+        curl --fail --silent --write-out "Reponse code: %{response_code}\n" https://raw.githubusercontent.com/TeiNam/prometheus-rds-exporter/main/configs/aws/policy.json -o prometheus-rds-exporter.policy.json
 
         # Create IAM policy
         aws iam create-policy --policy-name ${IAM_POLICY_NAME} --policy-document file://prometheus-rds-exporter.policy.json
@@ -426,7 +426,7 @@ See the [Development environment](#development-environment) to start the Prometh
     PROMETHEUS_RDS_EXPORTER_VERSION=0.3.0 # Replace with latest version
 
     PACKAGE_NAME=prometheus-rds-exporter_${PROMETHEUS_RDS_EXPORTER_VERSION}_$(uname -m).deb
-    wget https://github.com/qonto/prometheus-rds-exporter/releases/download/${PROMETHEUS_RDS_EXPORTER_VERSION}/${PACKAGE_NAME}
+    wget https://github.com/TeiNam/prometheus-rds-exporter/releases/download/${PROMETHEUS_RDS_EXPORTER_VERSION}/${PACKAGE_NAME}
     ```
 
 1. Install package
@@ -458,7 +458,7 @@ See the [Development environment](#development-environment) to start the Prometh
     PROMETHEUS_RDS_EXPORTER_VERSION=0.3.0 # Replace with latest version
     TARBALL_NAME=prometheus-rds-exporter_Linux_$(uname -m).tar.gz
 
-    wget https://github.com/qonto/prometheus-rds-exporter/releases/download/${PROMETHEUS_RDS_EXPORTER_VERSION}/${TARBALL_NAME}
+    wget https://github.com/TeiNam/prometheus-rds-exporter/releases/download/${PROMETHEUS_RDS_EXPORTER_VERSION}/${TARBALL_NAME}
     tar xvzf ${TARBALL_NAME}
     ```
 
@@ -485,7 +485,7 @@ See the [Development environment](#development-environment) to start the Prometh
 1. Start application
 
     ```bash
-    docker run -p 9043:9043 -e AWS_PROFILE=${AWS_PROFILE} -v $HOME/.aws:/app/.aws public.ecr.aws/qonto/prometheus-rds-exporter:latest
+    docker run -p 9043:9043 -e AWS_PROFILE=${AWS_PROFILE} -v $HOME/.aws:/app/.aws public.ecr.aws/TeiNam/prometheus-rds-exporter:latest
     ```
 
 ## Alternative

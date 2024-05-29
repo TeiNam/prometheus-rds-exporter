@@ -4,11 +4,11 @@ import (
 	"log/slog"
 	"testing"
 
+	"github.com/TeiNam/prometheus-rds-exporter/internal/app/cloudwatch"
+	cloudwatch_mock "github.com/TeiNam/prometheus-rds-exporter/internal/app/cloudwatch/mock"
+	converter "github.com/TeiNam/prometheus-rds-exporter/internal/app/unit"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	aws_cloudwatch_types "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
-	"github.com/qonto/prometheus-rds-exporter/internal/app/cloudwatch"
-	cloudwatch_mock "github.com/qonto/prometheus-rds-exporter/internal/app/cloudwatch/mock"
-	converter "github.com/qonto/prometheus-rds-exporter/internal/app/unit"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

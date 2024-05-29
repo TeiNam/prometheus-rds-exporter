@@ -6,7 +6,7 @@ This document explains how to manually release Prometheus RDS version.
 
 ## Authenticate on AWS
 
-1. Grant `qonto-team-devops` in ECR policy (managed by Terraform in `opensource` stack)
+1. Grant `TeiNam-team-devops` in ECR policy (managed by Terraform in `opensource` stack)
 
 1. Use `opensource-production` AWS PROFILE
 
@@ -45,5 +45,5 @@ This document explains how to manually release Prometheus RDS version.
 1. Perform dry-run install
 
     ```bash
-    helm install prometheus-rds-exporter oci://public.ecr.aws/qonto/test1-chart --dry-run
+    helm install prometheus-rds-exporter oci://public.ecr.aws/TeiNam/test1-chart --dry-run
     ```

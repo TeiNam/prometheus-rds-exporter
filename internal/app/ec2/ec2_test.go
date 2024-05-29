@@ -3,9 +3,9 @@ package ec2_test
 import (
 	"testing"
 
-	"github.com/qonto/prometheus-rds-exporter/internal/app/ec2"
-	mock "github.com/qonto/prometheus-rds-exporter/internal/app/ec2/mock"
-	converter "github.com/qonto/prometheus-rds-exporter/internal/app/unit"
+	"github.com/TeiNam/prometheus-rds-exporter/internal/app/ec2"
+	mock "github.com/TeiNam/prometheus-rds-exporter/internal/app/ec2/mock"
+	converter "github.com/TeiNam/prometheus-rds-exporter/internal/app/unit"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -4,7 +4,7 @@
 replicaCount: 1
 
 image:
-  repository: public.ecr.aws/qonto/prometheus-rds-exporter
+  repository: public.ecr.aws/TeiNam/prometheus-rds-exporter
   pullPolicy: IfNotPresent
   tag: ""  # Defined by chart appVersion parameter
 

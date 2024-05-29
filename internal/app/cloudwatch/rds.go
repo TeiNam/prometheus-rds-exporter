@@ -108,8 +108,8 @@ func (m *RdsMetrics) Update(field string, value float64) error {
 }
 
 // getCloudWatchMetricsName returns names of Cloudwatch metrics to collect
-func getCloudWatchMetricsName() [16]string {
-	return [16]string{
+func getCloudWatchMetricsName() [23]string {
+	return [23]string{
 		"CPUUtilization",
 		"DBLoad",
 		"DBLoadCPU",
@@ -126,6 +126,13 @@ func getCloudWatchMetricsName() [16]string {
 		"TransactionLogsDiskUsage",
 		"WriteIOPS",
 		"WriteThroughput",
+		"BufferCacheHitRatio",
+		"Deadlocks",
+		"Queries",
+		"EngineUptime",
+		"SumBinaryLogSize",
+		"NumBinaryLogFiles",
+		"AuroraBinlogReplicaLag",
 	}
 }
 

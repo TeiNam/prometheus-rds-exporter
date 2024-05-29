@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/TeiNam/prometheus-rds-exporter/internal/app/rds"
+	mock "github.com/TeiNam/prometheus-rds-exporter/internal/app/rds/mock"
+	converter "github.com/TeiNam/prometheus-rds-exporter/internal/app/unit"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	aws_rds "github.com/aws/aws-sdk-go-v2/service/rds"
 	aws_rds_types "github.com/aws/aws-sdk-go-v2/service/rds/types"
-	"github.com/qonto/prometheus-rds-exporter/internal/app/rds"
-	mock "github.com/qonto/prometheus-rds-exporter/internal/app/rds/mock"
-	converter "github.com/qonto/prometheus-rds-exporter/internal/app/unit"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

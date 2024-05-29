@@ -1,8 +1,8 @@
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 ---
 env:
-  - BUILD_INFO_PACKAGE_PATH=github.com/qonto/prometheus-rds-exporter/internal/infra/build
-  - DOCKER_REGISTRY=public.ecr.aws/qonto
+  - BUILD_INFO_PACKAGE_PATH=github.com/TeiNam/prometheus-rds-exporter/internal/infra/build
+  - DOCKER_REGISTRY=public.ecr.aws/TeiNam
   - DOCKER_IMAGE_NAME=prometheus-rds-exporter
 
 builds:
@@ -23,10 +23,10 @@ builds:
 
 nfpms:
   - file_name_template: "{{ .ConventionalFileName }}"
-    homepage: https://github.com/qonto/prometheus-rds-exporter
+    homepage: https://github.com/TeiNam/prometheus-rds-exporter
     description: Prometheus exporter for AWS RDS
-    maintainer: SRE Team <opensource+sre@qonto.com>
-    vendor: Qonto
+    maintainer: SRE Team <opensource+sre@TeiNam.com>
+    vendor: TeiNam
     section: misc
     license: MIT
     formats:
@@ -115,8 +115,8 @@ dockers:
     build_flag_templates:
       - --label=org.opencontainers.image.title={{ .ProjectName }}
       - --label=org.opencontainers.image.description={{ .ProjectName }}
-      - --label=org.opencontainers.image.url=https://github.com/qonto/prometheus-rds-exporter
-      - --label=org.opencontainers.image.source=https://github.com/qonto/prometheus-rds-exporter
+      - --label=org.opencontainers.image.url=https://github.com/TeiNam/prometheus-rds-exporter
+      - --label=org.opencontainers.image.source=https://github.com/TeiNam/prometheus-rds-exporter
       - --label=org.opencontainers.image.version={{ .Version }}
       - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
@@ -133,8 +133,8 @@ dockers:
     build_flag_templates:
       - --label=org.opencontainers.image.title={{ .ProjectName }}
       - --label=org.opencontainers.image.description={{ .ProjectName }}
-      - --label=org.opencontainers.image.url=https://github.com/qonto/prometheus-rds-exporter
-      - --label=org.opencontainers.image.source=https://github.com/qonto/prometheus-rds-exporter
+      - --label=org.opencontainers.image.url=https://github.com/TeiNam/prometheus-rds-exporter
+      - --label=org.opencontainers.image.source=https://github.com/TeiNam/prometheus-rds-exporter
       - --label=org.opencontainers.image.version={{ .Version }}
       - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
@@ -164,8 +164,8 @@ docker_manifests:
 
 release:
   github:
-    owner: qonto
+    owner: TeiNam
     name: prometheus-rds-exporter
   name_template: "v{{.Version}}"
   footer: |
-    **Full Changelog**: https://github.com/qonto/prometheus-rds-exporter/compare/{{ .PreviousTag }}...{{ .Tag }}
+    **Full Changelog**: https://github.com/TeiNam/prometheus-rds-exporter/compare/{{ .PreviousTag }}...{{ .Tag }}

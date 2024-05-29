@@ -8,10 +8,10 @@ import (
 	"reflect"
 	"time"
 
+	converter "github.com/TeiNam/prometheus-rds-exporter/internal/app/unit"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	aws_rds "github.com/aws/aws-sdk-go-v2/service/rds"
 	aws_rds_types "github.com/aws/aws-sdk-go-v2/service/rds/types"
-	converter "github.com/qonto/prometheus-rds-exporter/internal/app/unit"
 )
 
 type Configuration struct {

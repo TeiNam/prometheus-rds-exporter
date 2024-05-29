@@ -1,7 +1,7 @@
 [Unit]
 Description=Prometheus RDS exporter
 After=network-online.target
-Documentation=https://github.com/qonto/prometheus-rds-exporter
+Documentation=https://github.com/TeiNam/prometheus-rds-exporter
 
 [Service]
 Restart=on-failure

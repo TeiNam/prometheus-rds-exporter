@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/qonto/prometheus-rds-exporter/internal/app/exporter"
+	"github.com/TeiNam/prometheus-rds-exporter/internal/app/exporter"
 )
 
 func TestClearPrometheusLabel(t *testing.T) {

@@ -3,7 +3,7 @@ package exporter
 import (
 	"regexp"
 
-	"github.com/qonto/prometheus-rds-exporter/internal/app/rds"
+	"github.com/TeiNam/prometheus-rds-exporter/internal/app/rds"
 	"golang.org/x/exp/slices"
 )
 

@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
+	converter "github.com/TeiNam/prometheus-rds-exporter/internal/app/unit"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	aws_cloudwatch "github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	aws_cloudwatch_types "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
-	converter "github.com/qonto/prometheus-rds-exporter/internal/app/unit"
 )
 
 type UsageMetrics struct {

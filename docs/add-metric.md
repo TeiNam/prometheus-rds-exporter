@@ -28,4 +28,4 @@ Steps:
 
 1. Optional. Update Grafana dashboards to display the metric
 
-1. Optional. Add alert using the new metric in [DMF](https://github.com/qonto/database-monitoring-framework)
+1. Optional. Add alert using the new metric in [DMF](https://github.com/TeiNam/database-monitoring-framework)

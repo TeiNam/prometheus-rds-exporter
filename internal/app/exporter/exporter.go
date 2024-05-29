@@ -7,12 +7,12 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/TeiNam/prometheus-rds-exporter/internal/app/cloudwatch"
+	"github.com/TeiNam/prometheus-rds-exporter/internal/app/ec2"
+	"github.com/TeiNam/prometheus-rds-exporter/internal/app/rds"
+	"github.com/TeiNam/prometheus-rds-exporter/internal/app/servicequotas"
+	"github.com/TeiNam/prometheus-rds-exporter/internal/infra/build"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/qonto/prometheus-rds-exporter/internal/app/cloudwatch"
-	"github.com/qonto/prometheus-rds-exporter/internal/app/ec2"
-	"github.com/qonto/prometheus-rds-exporter/internal/app/rds"
-	"github.com/qonto/prometheus-rds-exporter/internal/app/servicequotas"
-	"github.com/qonto/prometheus-rds-exporter/internal/infra/build"
 )
 
 const (

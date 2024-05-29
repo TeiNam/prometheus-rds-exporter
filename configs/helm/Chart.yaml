@@ -8,14 +8,14 @@ appVersion: 0.0.0
 
 name: prometheus-rds-exporter-chart
 description: Prometheus RDS exporter
-home: https://github.com/qonto/prometheus-rds-exporter
+home: https://github.com/TeiNam/prometheus-rds-exporter
 sources:
-  - https://github.com/qonto/prometheus-rds-exporter
+  - https://github.com/TeiNam/prometheus-rds-exporter
 annotations:
   artifacthub.io/category: database
   artifacthub.io/links: |
     - name: Chart Source
-      url: https://github.com/qonto/prometheus-rds-exporter/tree/main/configs/helm
+      url: https://github.com/TeiNam/prometheus-rds-exporter/tree/main/configs/helm
 keywords:
   - aws
   - exporter

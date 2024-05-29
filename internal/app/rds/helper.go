@@ -3,8 +3,8 @@ package rds
 import (
 	"strings"
 
+	converter "github.com/TeiNam/prometheus-rds-exporter/internal/app/unit"
 	aws_rds_types "github.com/aws/aws-sdk-go-v2/service/rds/types"
-	converter "github.com/qonto/prometheus-rds-exporter/internal/app/unit"
 )
 
 func ThresholdValue(min int64, value int64, max int64) int64 {

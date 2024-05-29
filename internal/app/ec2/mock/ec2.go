@@ -4,9 +4,9 @@ package mocks
 import (
 	"context"
 
+	"github.com/TeiNam/prometheus-rds-exporter/internal/app/ec2"
 	aws_ec2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	aws_ec2_types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/qonto/prometheus-rds-exporter/internal/app/ec2"
 )
 
 //nolint:golint,gomnd

@@ -13,8 +13,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/TeiNam/prometheus-rds-exporter/internal/infra/build"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/qonto/prometheus-rds-exporter/internal/infra/build"
 )
 
 const (

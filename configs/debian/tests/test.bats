@@ -37,7 +37,7 @@ purge_package() {
   assert_output --regexp 'Prometheus exporter for AWS RDS'
   assert_output --regexp 'Depends: adduser'
   assert_output --regexp 'Maintainer: SRE Team'
-  assert_output --regexp 'Homepage: https://github.com/qonto/prometheus-rds-exporter'
+  assert_output --regexp 'Homepage: https://github.com/TeiNam/prometheus-rds-exporter'
 
   run bash -c 'id -u prometheus-rds-exporter'
   assert_success

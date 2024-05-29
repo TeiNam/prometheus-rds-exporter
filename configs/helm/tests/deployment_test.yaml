@@ -13,7 +13,7 @@ tests:
           value: RELEASE-NAME-prometheus-rds-exporter-chart
       - equal:
           path: spec.template.spec.containers[0].image
-          value: public.ecr.aws/qonto/prometheus-rds-exporter:0.0.0
+          value: public.ecr.aws/TeiNam/prometheus-rds-exporter:0.0.0
       - equal:
           path: spec.replicas
           value: 1
@@ -25,7 +25,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: public.ecr.aws/qonto/prometheus-rds-exporter:1.0
+          value: public.ecr.aws/TeiNam/prometheus-rds-exporter:1.0
   - it: render deployment with environment variables
     values:
       - ./values/with_environment_variables.yaml

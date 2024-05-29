@@ -3,18 +3,18 @@ package exporter_test
 import (
 	"testing"
 
+	"github.com/TeiNam/prometheus-rds-exporter/internal/app/exporter"
+	"github.com/TeiNam/prometheus-rds-exporter/internal/infra/logger"
 	aws_rds "github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/prometheus/client_golang/prometheus/testutil"
-	"github.com/qonto/prometheus-rds-exporter/internal/app/exporter"
-	"github.com/qonto/prometheus-rds-exporter/internal/infra/logger"
 	"github.com/stretchr/testify/assert"
 
+	cloudwatch_mock "github.com/TeiNam/prometheus-rds-exporter/internal/app/cloudwatch/mock"
+	ec2_mock "github.com/TeiNam/prometheus-rds-exporter/internal/app/ec2/mock"
+	rds_mock "github.com/TeiNam/prometheus-rds-exporter/internal/app/rds/mock"
+	servicequotas_mock "github.com/TeiNam/prometheus-rds-exporter/internal/app/servicequotas/mock"
+	converter "github.com/TeiNam/prometheus-rds-exporter/internal/app/unit"
 	aws_rds_types "github.com/aws/aws-sdk-go-v2/service/rds/types"
-	cloudwatch_mock "github.com/qonto/prometheus-rds-exporter/internal/app/cloudwatch/mock"
-	ec2_mock "github.com/qonto/prometheus-rds-exporter/internal/app/ec2/mock"
-	rds_mock "github.com/qonto/prometheus-rds-exporter/internal/app/rds/mock"
-	servicequotas_mock "github.com/qonto/prometheus-rds-exporter/internal/app/servicequotas/mock"
-	converter "github.com/qonto/prometheus-rds-exporter/internal/app/unit"
 )
 
 func TestWithAllDisabledCollectors(t *testing.T) {

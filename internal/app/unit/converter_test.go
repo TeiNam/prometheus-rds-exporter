@@ -3,7 +3,7 @@ package converter_test
 import (
 	"testing"
 
-	converter "github.com/qonto/prometheus-rds-exporter/internal/app/unit"
+	converter "github.com/TeiNam/prometheus-rds-exporter/internal/app/unit"
 	"github.com/stretchr/testify/assert"
 )
 

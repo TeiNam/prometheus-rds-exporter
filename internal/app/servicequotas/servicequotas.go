@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
+	converter "github.com/TeiNam/prometheus-rds-exporter/internal/app/unit"
 	aws_servicequotas "github.com/aws/aws-sdk-go-v2/service/servicequotas"
-	converter "github.com/qonto/prometheus-rds-exporter/internal/app/unit"
 	"golang.org/x/exp/slog"
 )
 
