@@ -51,7 +51,7 @@ type RdsCollector struct {
 	wg            sync.WaitGroup
 	logger        slog.Logger
 	counters      Counters
-	metrics       metrics
+	Metrics       metrics
 	awsAccountID  string
 	awsRegion     string
 	configuration Configuration
@@ -404,7 +404,7 @@ func (c *RdsCollector) fetchMetrics() error {
 		return fmt.Errorf("can't fetch RDS metrics: %w", err)
 	}
 
-	c.metrics.RDS = rdsMetrics
+	c.Metrics.RDS = rdsMetrics
 	c.counters.RDSAPIcalls += rdsFetcher.GetStatistics().RdsAPICall
 	c.logger.Debug("RDS metrics fetched")
 
@@ -441,7 +441,7 @@ func (c *RdsCollector) getCloudwatchMetrics(client cloudwatch.CloudWatchClient, 
 	}
 
 	c.counters.CloudwatchAPICalls += fetcher.GetStatistics().CloudWatchAPICall
-	c.metrics.CloudwatchInstances = metrics
+	c.Metrics.CloudwatchInstances = metrics
 
 	c.logger.Debug("cloudwatch metrics fetched", "metrics", metrics)
 }
@@ -459,7 +459,7 @@ func (c *RdsCollector) getUsagesMetrics(client cloudwatch.CloudWatchClient) {
 	}
 
 	c.counters.UsageAPIcalls += fetcher.GetStatistics().CloudWatchAPICall
-	c.metrics.CloudWatchUsage = metrics
+	c.Metrics.CloudWatchUsage = metrics
 
 	c.logger.Debug("usage metrics fetched", "metrics", metrics)
 }
@@ -477,7 +477,7 @@ func (c *RdsCollector) getEC2Metrics(client ec2.EC2Client, instanceTypes []strin
 	}
 
 	c.counters.EC2APIcalls += fetcher.GetStatistics().EC2ApiCall
-	c.metrics.EC2 = metrics
+	c.Metrics.EC2 = metrics
 
 	c.logger.Debug("EC2 metrics fetched", "metrics", metrics)
 }
@@ -495,7 +495,7 @@ func (c *RdsCollector) getQuotasMetrics(client servicequotas.ServiceQuotasClient
 	}
 
 	c.counters.ServiceQuotasAPICalls += fetcher.GetStatistics().UsageAPICall
-	c.metrics.ServiceQuota = metrics
+	c.Metrics.ServiceQuota = metrics
 }
 
 func (c *RdsCollector) getInstanceTagLabels(dbidentifier string, instance rds.RdsInstanceMetrics) (keys []string, values []string) {
@@ -537,7 +537,7 @@ func (c *RdsCollector) Collect(ch chan<- prometheus.Metric) {
 
 	// RDS metrics
 	ch <- prometheus.MustNewConstMetric(c.apiCall, prometheus.CounterValue, c.counters.RDSAPIcalls, c.awsAccountID, c.awsRegion, "rds")
-	for dbidentifier, instance := range c.metrics.RDS.Instances {
+	for dbidentifier, instance := range c.Metrics.RDS.Instances {
 		ch <- prometheus.MustNewConstMetric(
 			c.allocatedStorage,
 			prometheus.GaugeValue,
@@ -595,7 +595,7 @@ func (c *RdsCollector) Collect(ch chan<- prometheus.Metric) {
 	// Cloudwatch metrics
 	ch <- prometheus.MustNewConstMetric(c.apiCall, prometheus.CounterValue, c.counters.CloudwatchAPICalls, c.awsAccountID, c.awsRegion, "cloudwatch")
 
-	for dbidentifier, instance := range c.metrics.CloudwatchInstances.Instances {
+	for dbidentifier, instance := range c.Metrics.CloudwatchInstances.Instances {
 		if instance.DatabaseConnections != nil {
 			ch <- prometheus.MustNewConstMetric(c.databaseConnections, prometheus.GaugeValue, *instance.DatabaseConnections, c.awsAccountID, c.awsRegion, dbidentifier)
 		}
@@ -696,14 +696,14 @@ func (c *RdsCollector) Collect(ch chan<- prometheus.Metric) {
 	// usage metrics
 	if c.configuration.CollectUsages {
 		ch <- prometheus.MustNewConstMetric(c.apiCall, prometheus.CounterValue, c.counters.UsageAPIcalls, c.awsAccountID, c.awsRegion, "usage")
-		ch <- prometheus.MustNewConstMetric(c.usageAllocatedStorage, prometheus.GaugeValue, c.metrics.CloudWatchUsage.AllocatedStorage, c.awsAccountID, c.awsRegion)
-		ch <- prometheus.MustNewConstMetric(c.usageDBInstances, prometheus.GaugeValue, c.metrics.CloudWatchUsage.DBInstances, c.awsAccountID, c.awsRegion)
-		ch <- prometheus.MustNewConstMetric(c.usageManualSnapshots, prometheus.GaugeValue, c.metrics.CloudWatchUsage.ManualSnapshots, c.awsAccountID, c.awsRegion)
+		ch <- prometheus.MustNewConstMetric(c.usageAllocatedStorage, prometheus.GaugeValue, c.Metrics.CloudWatchUsage.AllocatedStorage, c.awsAccountID, c.awsRegion)
+		ch <- prometheus.MustNewConstMetric(c.usageDBInstances, prometheus.GaugeValue, c.Metrics.CloudWatchUsage.DBInstances, c.awsAccountID, c.awsRegion)
+		ch <- prometheus.MustNewConstMetric(c.usageManualSnapshots, prometheus.GaugeValue, c.Metrics.CloudWatchUsage.ManualSnapshots, c.awsAccountID, c.awsRegion)
 	}
 
 	// EC2 metrics
 	ch <- prometheus.MustNewConstMetric(c.apiCall, prometheus.CounterValue, c.counters.EC2APIcalls, c.awsAccountID, c.awsRegion, "ec2")
-	for instanceType, instance := range c.metrics.EC2.Instances {
+	for instanceType, instance := range c.Metrics.EC2.Instances {
 		ch <- prometheus.MustNewConstMetric(c.instanceMaximumIops, prometheus.GaugeValue, float64(instance.MaximumIops), c.awsAccountID, c.awsRegion, instanceType)
 		ch <- prometheus.MustNewConstMetric(c.instanceMaximumThroughput, prometheus.GaugeValue, instance.MaximumThroughput, c.awsAccountID, c.awsRegion, instanceType)
 		ch <- prometheus.MustNewConstMetric(c.instanceMemory, prometheus.GaugeValue, float64(instance.Memory), c.awsAccountID, c.awsRegion, instanceType)
@@ -713,9 +713,9 @@ func (c *RdsCollector) Collect(ch chan<- prometheus.Metric) {
 	// serviceQuotas metrics
 	if c.configuration.CollectQuotas {
 		ch <- prometheus.MustNewConstMetric(c.apiCall, prometheus.CounterValue, c.counters.ServiceQuotasAPICalls, c.awsAccountID, c.awsRegion, "servicequotas")
-		ch <- prometheus.MustNewConstMetric(c.quotaDBInstances, prometheus.GaugeValue, c.metrics.ServiceQuota.DBinstances, c.awsAccountID, c.awsRegion)
-		ch <- prometheus.MustNewConstMetric(c.quotaTotalStorage, prometheus.GaugeValue, c.metrics.ServiceQuota.TotalStorage, c.awsAccountID, c.awsRegion)
-		ch <- prometheus.MustNewConstMetric(c.quotaMaxDBInstanceSnapshots, prometheus.GaugeValue, c.metrics.ServiceQuota.ManualDBInstanceSnapshots, c.awsAccountID, c.awsRegion)
+		ch <- prometheus.MustNewConstMetric(c.quotaDBInstances, prometheus.GaugeValue, c.Metrics.ServiceQuota.DBinstances, c.awsAccountID, c.awsRegion)
+		ch <- prometheus.MustNewConstMetric(c.quotaTotalStorage, prometheus.GaugeValue, c.Metrics.ServiceQuota.TotalStorage, c.awsAccountID, c.awsRegion)
+		ch <- prometheus.MustNewConstMetric(c.quotaMaxDBInstanceSnapshots, prometheus.GaugeValue, c.Metrics.ServiceQuota.ManualDBInstanceSnapshots, c.awsAccountID, c.awsRegion)
 	}
 }
 
@@ -724,5 +724,5 @@ func (c *RdsCollector) GetStatistics() Counters {
 }
 
 func (c *RdsCollector) GetMetrics() metrics {
-	return c.metrics
+	return c.Metrics
 }
