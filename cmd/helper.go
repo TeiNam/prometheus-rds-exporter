@@ -12,8 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 )
 
-func getAWSConfiguration(logger *slog.Logger, roleArn string, sessionName string) (aws.Config, error) {
-	cfg, err := config.LoadDefaultConfig(context.TODO())
+// getAWSConfiguration 함수는 리전 매개변수를 받아 해당 리전의 구성을 반환합니다.
+func getAWSConfiguration(logger *slog.Logger, roleArn, sessionName, region string) (aws.Config, error) {
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion(region), // 지정된 리전을 사용하여 기본 구성을 로드합니다.
+	)
 	if err != nil {
 		return aws.Config{}, fmt.Errorf("can't create AWS session: %w", err)
 	}

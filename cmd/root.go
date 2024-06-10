@@ -30,21 +30,22 @@ const (
 var cfgFile string
 
 type exporterConfig struct {
-	Debug                  bool   `mapstructure:"debug"`
-	LogFormat              string `mapstructure:"log-format"`
-	TLSCertPath            string `mapstructure:"tls-cert-path"`
-	TLSKeyPath             string `mapstructure:"tls-key-path"`
-	MetricPath             string `mapstructure:"metrics-path"`
-	ListenAddress          string `mapstructure:"listen-address"`
-	AWSAssumeRoleSession   string `mapstructure:"aws-assume-role-session"`
-	AWSAssumeRoleArn       string `mapstructure:"aws-assume-role-arn"`
-	CollectInstanceMetrics bool   `mapstructure:"collect-instance-metrics"`
-	CollectInstanceTags    bool   `mapstructure:"collect-instance-tags"`
-	CollectInstanceTypes   bool   `mapstructure:"collect-instance-types"`
-	CollectLogsSize        bool   `mapstructure:"collect-logs-size"`
-	CollectMaintenances    bool   `mapstructure:"collect-maintenances"`
-	CollectQuotas          bool   `mapstructure:"collect-quotas"`
-	CollectUsages          bool   `mapstructure:"collect-usages"`
+	Debug                  bool     `mapstructure:"debug"`
+	LogFormat              string   `mapstructure:"log-format"`
+	TLSCertPath            string   `mapstructure:"tls-cert-path"`
+	TLSKeyPath             string   `mapstructure:"tls-key-path"`
+	MetricPath             string   `mapstructure:"metrics-path"`
+	ListenAddress          string   `mapstructure:"listen-address"`
+	AWSAssumeRoleSession   string   `mapstructure:"aws-assume-role-session"`
+	AWSAssumeRoleArn       string   `mapstructure:"aws-assume-role-arn"`
+	CollectInstanceMetrics bool     `mapstructure:"collect-instance-metrics"`
+	CollectInstanceTags    bool     `mapstructure:"collect-instance-tags"`
+	CollectInstanceTypes   bool     `mapstructure:"collect-instance-types"`
+	CollectLogsSize        bool     `mapstructure:"collect-logs-size"`
+	CollectMaintenances    bool     `mapstructure:"collect-maintenances"`
+	CollectQuotas          bool     `mapstructure:"collect-quotas"`
+	CollectUsages          bool     `mapstructure:"collect-usages"`
+	AWSRegions             []string `mapstructure:"aws-regions"`
 }
 
 func run(configuration exporterConfig) {
@@ -54,36 +55,38 @@ func run(configuration exporterConfig) {
 		panic(err)
 	}
 
-	cfg, err := getAWSConfiguration(logger, configuration.AWSAssumeRoleArn, configuration.AWSAssumeRoleSession)
-	if err != nil {
-		logger.Error("can't initialize AWS configuration", "reason", err)
-		os.Exit(awsErrorExitCode)
+	for _, region := range configuration.AWSRegions {
+		cfg, err := getAWSConfiguration(logger, configuration.AWSAssumeRoleArn, configuration.AWSAssumeRoleSession, region)
+		if err != nil {
+			logger.Error("can't initialize AWS configuration for region", "region", region, "reason", err)
+			os.Exit(awsErrorExitCode)
+		}
+
+		awsAccountID, awsRegion, err := getAWSSessionInformation(cfg)
+		if err != nil {
+			logger.Error("can't identify AWS account and/or region", "reason", err)
+			os.Exit(awsErrorExitCode)
+		}
+
+		rdsClient := rds.NewFromConfig(cfg)
+		ec2Client := ec2.NewFromConfig(cfg)
+		cloudWatchClient := cloudwatch.NewFromConfig(cfg)
+		servicequotasClient := servicequotas.NewFromConfig(cfg)
+
+		collectorConfiguration := exporter.Configuration{
+			CollectInstanceMetrics: configuration.CollectInstanceMetrics,
+			CollectInstanceTypes:   configuration.CollectInstanceTypes,
+			CollectInstanceTags:    configuration.CollectInstanceTags,
+			CollectLogsSize:        configuration.CollectLogsSize,
+			CollectMaintenances:    configuration.CollectMaintenances,
+			CollectQuotas:          configuration.CollectQuotas,
+			CollectUsages:          configuration.CollectUsages,
+		}
+
+		collector := exporter.NewCollector(*logger, collectorConfiguration, awsAccountID, awsRegion, rdsClient, ec2Client, cloudWatchClient, servicequotasClient)
+
+		prometheus.MustRegister(collector)
 	}
-
-	awsAccountID, awsRegion, err := getAWSSessionInformation(cfg)
-	if err != nil {
-		logger.Error("can't identify AWS account and/or region", "reason", err)
-		os.Exit(awsErrorExitCode)
-	}
-
-	rdsClient := rds.NewFromConfig(cfg)
-	ec2Client := ec2.NewFromConfig(cfg)
-	cloudWatchClient := cloudwatch.NewFromConfig(cfg)
-	servicequotasClient := servicequotas.NewFromConfig(cfg)
-
-	collectorConfiguration := exporter.Configuration{
-		CollectInstanceMetrics: configuration.CollectInstanceMetrics,
-		CollectInstanceTypes:   configuration.CollectInstanceTypes,
-		CollectInstanceTags:    configuration.CollectInstanceTags,
-		CollectLogsSize:        configuration.CollectLogsSize,
-		CollectMaintenances:    configuration.CollectMaintenances,
-		CollectQuotas:          configuration.CollectQuotas,
-		CollectUsages:          configuration.CollectUsages,
-	}
-
-	collector := exporter.NewCollector(*logger, collectorConfiguration, awsAccountID, awsRegion, rdsClient, ec2Client, cloudWatchClient, servicequotasClient)
-
-	prometheus.MustRegister(collector)
 
 	serverConfiguration := http.Config{
 		ListenAddress: configuration.ListenAddress,
@@ -138,6 +141,7 @@ func NewRootCommand() (*cobra.Command, error) {
 	cmd.Flags().BoolP("collect-maintenances", "", true, "Collect AWS instances maintenances")
 	cmd.Flags().BoolP("collect-quotas", "", true, "Collect AWS RDS quotas")
 	cmd.Flags().BoolP("collect-usages", "", true, "Collect AWS RDS usages")
+	cmd.Flags().StringSliceP("aws-regions", "", []string{"us-east-1"}, "AWS regions to fetch metrics from")
 
 	err := viper.BindPFlag("debug", cmd.Flags().Lookup("debug"))
 	if err != nil {
@@ -214,6 +218,11 @@ func NewRootCommand() (*cobra.Command, error) {
 		return cmd, fmt.Errorf("failed to bind 'collect-maintenances' parameter: %w", err)
 	}
 
+	err = viper.BindPFlag("aws-regions", cmd.Flags().Lookup("aws-regions"))
+	if err != nil {
+		return cmd, fmt.Errorf("failed to bind 'aws-regions' parameter: %w", err)
+	}
+
 	return cmd, nil
 }
 
@@ -263,4 +272,10 @@ func initConfig() {
 	viper.SetEnvPrefix("prometheus_rds_exporter") // will be uppercased automatically
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	viper.AutomaticEnv()
+
+	regions := viper.GetStringSlice("aws-regions")
+	if len(regions) == 0 {
+		regions = []string{"us-east-1"} // 기본값 설정
+	}
+	viper.Set("aws-regions", regions)
 }
