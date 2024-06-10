@@ -1,5 +1,7 @@
 github.com/TeiNam/prometheus-rds-exporter v0.0.0-20240507075953-bf8de46c4ee1 h1:nPlp4cLeahUzuA4Oe9V03f0S/VMtxSuw1UozeHA+VFk=
 github.com/TeiNam/prometheus-rds-exporter v0.0.0-20240507075953-bf8de46c4ee1/go.mod h1:9W5DvVGZcDF1XT5fY5nP8BwlwOS+qmkpPBQgHgWUMBY=
+github.com/aws/aws-sdk-go v1.53.19 h1:WEuWc918RXlIaPCyU11F7hH9H1ItK+8m2c/uoQNRUok=
+github.com/aws/aws-sdk-go v1.53.19/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/aws/aws-sdk-go-v2 v1.25.3 h1:xYiLpZTQs1mzvz5PaI6uR0Wh57ippuEthxS4iK5v0n0=
 github.com/aws/aws-sdk-go-v2 v1.25.3/go.mod h1:35hUlJVYd+M++iLI3ALmVwMOyRYMmRqUXpTtRGW+K9I=
 github.com/aws/aws-sdk-go-v2 v1.26.1 h1:5554eUqIYVWpU0YmeeYZ0wU64H2VLBs8TlhRB2L+EkA=
@@ -123,8 +125,6 @@ github.com/prometheus/common v0.48.0 h1:QO8U2CdOzSn1BBsmXJXduaaW+dY/5QLjfB8svtSz
 github.com/prometheus/common v0.48.0/go.mod h1:0/KsvlIEfPQCQ5I2iNSAWKPZziNCvRs5EC6ILDTlAPc=
 github.com/prometheus/procfs v0.12.0 h1:jluTpSng7V9hY0O2R9DzzJHYb2xULk9VTR1V1R/k6Bo=
 github.com/prometheus/procfs v0.12.0/go.mod h1:pcuDEFsWDnvcgNzo4EEweacyhjeA9Zk3cnaOZAZEfOo=
-github.com/TeiNam/prometheus-rds-exporter v0.0.0-20240507075953-bf8de46c4ee1 h1:nPlp4cLeahUzuA4Oe9V03f0S/VMtxSuw1UozeHA+VFk=
-github.com/TeiNam/prometheus-rds-exporter v0.0.0-20240507075953-bf8de46c4ee1/go.mod h1:9W5DvVGZcDF1XT5fY5nP8BwlwOS+qmkpPBQgHgWUMBY=
 github.com/rogpeppe/go-internal v1.10.0 h1:TMyTOH3F/DB16zRVcYyreMH6GnZZrwQVAoYjRBZyWFQ=
 github.com/rogpeppe/go-internal v1.10.0/go.mod h1:UQnix2H7Ngw/k4C5ijL5+65zddjncjaFoBhdsK/akog=
 github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=

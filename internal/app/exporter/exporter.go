@@ -3,6 +3,10 @@ package exporter
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"gopkg.in/yaml.v3"
+	"io/ioutil"
 	"log/slog"
 	"strconv"
 	"sync"
@@ -28,6 +32,7 @@ type Configuration struct {
 	CollectMaintenances    bool
 	CollectQuotas          bool
 	CollectUsages          bool
+	AWSRegions             []string `yaml:"aws-regions"`
 }
 
 type Counters struct {
@@ -110,6 +115,33 @@ type RdsCollector struct {
 	NumBinaryLogFiles           *prometheus.Desc
 	AuroraBinlogReplicaLag      *prometheus.Desc
 	BinLogDiskUsage             *prometheus.Desc
+}
+
+func LoadConfig(path string) (*Configuration, error) {
+	config := &Configuration{}
+	yamlFile, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	err = yaml.Unmarshal(yamlFile, config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
+}
+
+func createAWSSessions(config *Configuration) ([]*session.Session, error) {
+	var sessions []*session.Session
+	for _, region := range config.AWSRegions {
+		sess, err := session.NewSession(&aws.Config{
+			Region: aws.String(region),
+		})
+		if err != nil {
+			return nil, err
+		}
+		sessions = append(sessions, sess)
+	}
+	return sessions, nil
 }
 
 func NewCollector(logger slog.Logger, collectorConfiguration Configuration, awsAccountID string, awsRegion string, rdsClient rdsClient, ec2Client EC2Client, cloudWatchClient cloudWatchClient, servicequotasClient servicequotasClient) *RdsCollector {
@@ -376,51 +408,54 @@ func (c *RdsCollector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 // getMetrics collects and return all RDS metrics
-func (c *RdsCollector) fetchMetrics() error {
-	c.logger.Debug("received query")
+func (c *RdsCollector) fetchMetrics(sessions []*session.Session) error {
+	for _, sess := range sessions {
+		// AWS 리전을 로깅
+		region := *sess.Config.Region
+		c.logger.Info("Fetching metrics from region: ", region)
 
-	// Fetch serviceQuotas metrics
-	if c.configuration.CollectQuotas {
-		go c.getQuotasMetrics(c.servicequotasClient)
-		c.wg.Add(1)
-	}
+		// Fetch serviceQuotas metrics
+		if c.configuration.CollectQuotas {
+			go c.getQuotasMetrics(servicequotas.New(sess))
+			c.wg.Add(1)
+		}
 
-	// Fetch usages metrics
-	if c.configuration.CollectUsages {
-		go c.getUsagesMetrics(c.cloudWatchClient)
-		c.wg.Add(1)
-	}
+		// Fetch usages metrics
+		if c.configuration.CollectUsages {
+			go c.getUsagesMetrics(cloudwatch.New(sess))
+			c.wg.Add(1)
+		}
 
-	// Fetch RDS instances metrics
-	c.logger.Info("get RDS metrics")
+		// Fetch RDS instances metrics
+		rdsFetcher := rds.NewFetcher(rds.New(sess), rds.Configuration{
+			CollectLogsSize:     c.configuration.CollectLogsSize,
+			CollectMaintenances: c.configuration.CollectMaintenances,
+		})
 
-	rdsFetcher := rds.NewFetcher(c.rdsClient, rds.Configuration{
-		CollectLogsSize:     c.configuration.CollectLogsSize,
-		CollectMaintenances: c.configuration.CollectMaintenances,
-	})
+		rdsMetrics, err := rdsFetcher.GetInstancesMetrics()
+		if err != nil {
+			c.logger.Error("Failed to fetch RDS metrics from region: ", region, " Error: ", err)
+			continue
+		}
 
-	rdsMetrics, err := rdsFetcher.GetInstancesMetrics()
-	if err != nil {
-		return fmt.Errorf("can't fetch RDS metrics: %w", err)
-	}
+		c.Metrics.RDS = rdsMetrics
+		c.counters.RDSAPIcalls += rdsFetcher.GetStatistics().RdsAPICall
+		c.logger.Info("RDS metrics fetched from region: ", region)
 
-	c.Metrics.RDS = rdsMetrics
-	c.counters.RDSAPIcalls += rdsFetcher.GetStatistics().RdsAPICall
-	c.logger.Debug("RDS metrics fetched")
+		// Compute uniq instances identifiers and instance types
+		instanceIdentifiers, instanceTypes := getUniqTypeAndIdentifiers(rdsMetrics.Instances)
 
-	// Compute uniq instances identifiers and instance types
-	instanceIdentifiers, instanceTypes := getUniqTypeAndIdentifiers(rdsMetrics.Instances)
+		// Fetch EC2 Metrics for instance types
+		if c.configuration.CollectInstanceTypes && len(instanceTypes) > 0 {
+			go c.getEC2Metrics(ec2.New(sess), instanceTypes)
+			c.wg.Add(1)
+		}
 
-	// Fetch EC2 Metrics for instance types
-	if c.configuration.CollectInstanceTypes && len(instanceTypes) > 0 {
-		go c.getEC2Metrics(c.EC2Client, instanceTypes)
-		c.wg.Add(1)
-	}
-
-	// Fetch Cloudwatch metrics for instances
-	if c.configuration.CollectInstanceMetrics {
-		go c.getCloudwatchMetrics(c.cloudWatchClient, instanceIdentifiers)
-		c.wg.Add(1)
+		// Fetch Cloudwatch metrics for instances
+		if c.configuration.CollectInstanceMetrics {
+			go c.getCloudwatchMetrics(cloudwatch.New(sess), instanceIdentifiers)
+			c.wg.Add(1)
+		}
 	}
 
 	// Wait for all go routines to finish
@@ -524,13 +559,27 @@ func (c *RdsCollector) Collect(ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(c.exporterBuildInformation, prometheus.GaugeValue, 1, build.Version, build.CommitSHA, build.Date)
 	ch <- prometheus.MustNewConstMetric(c.errors, prometheus.CounterValue, c.counters.Errors)
 
+	// AWS 세션 생성
+	configPath := "configs/helm/templates/prometheus-rds-exporter.yml"
+	config, err := LoadConfig(configPath)
+	if err != nil {
+		c.logger.Error("Failed to load config: %v", err)
+		ch <- prometheus.MustNewConstMetric(c.up, prometheus.CounterValue, exporterDownStatusCode)
+		return
+	}
+	sessions, err := createAWSSessions(config)
+	if err != nil {
+		c.logger.Error("Failed to create AWS sessions: %v", err)
+		ch <- prometheus.MustNewConstMetric(c.up, prometheus.CounterValue, exporterDownStatusCode)
+		return
+	}
+
 	// Get all metrics
-	err := c.fetchMetrics()
+	err = c.fetchMetrics(sessions)
 	if err != nil {
 		c.logger.Error(fmt.Sprintf("can't scrape metrics: %s", err))
 		// Mark exporter as down
 		ch <- prometheus.MustNewConstMetric(c.up, prometheus.CounterValue, exporterDownStatusCode)
-
 		return
 	}
 	ch <- prometheus.MustNewConstMetric(c.up, prometheus.CounterValue, exporterUpStatusCode)
