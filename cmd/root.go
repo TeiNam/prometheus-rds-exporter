@@ -1,21 +1,22 @@
-// Package cmd implements command to start the RDS exporter
 package cmd
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/TeiNam/prometheus-rds-exporter/internal/app/exporter"
 	"github.com/TeiNam/prometheus-rds-exporter/internal/infra/build"
-	"github.com/TeiNam/prometheus-rds-exporter/internal/infra/http"
 	"github.com/TeiNam/prometheus-rds-exporter/internal/infra/logger"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	dto "github.com/prometheus/client_model/go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -51,11 +52,14 @@ type exporterConfig struct {
 func run(configuration exporterConfig) {
 	logger, err := logger.New(configuration.Debug, configuration.LogFormat)
 	if err != nil {
-		fmt.Println("ERROR: Fail to initialize logger: %w", err)
+		fmt.Println("ERROR: Fail to initialize logger:", err)
 		panic(err)
 	}
 
+	registries := make(map[string]*prometheus.Registry)
+
 	for _, region := range configuration.AWSRegions {
+		logger.Info("Initializing AWS configuration for region", "region", region)
 		cfg, err := getAWSConfiguration(logger, configuration.AWSAssumeRoleArn, configuration.AWSAssumeRoleSession, region)
 		if err != nil {
 			logger.Error("can't initialize AWS configuration for region", "region", region, "reason", err)
@@ -67,6 +71,8 @@ func run(configuration exporterConfig) {
 			logger.Error("can't identify AWS account and/or region", "reason", err)
 			os.Exit(awsErrorExitCode)
 		}
+
+		logger.Info("Successfully initialized AWS configuration", "region", region, "accountID", awsAccountID, "awsRegion", awsRegion)
 
 		rdsClient := rds.NewFromConfig(cfg)
 		ec2Client := ec2.NewFromConfig(cfg)
@@ -85,19 +91,36 @@ func run(configuration exporterConfig) {
 
 		collector := exporter.NewCollector(*logger, collectorConfiguration, awsAccountID, awsRegion, rdsClient, ec2Client, cloudWatchClient, servicequotasClient)
 
-		prometheus.MustRegister(collector)
+		registry := prometheus.NewRegistry()
+		registry.MustRegister(collector)
+		registries[region] = registry
+
+		logger.Info("Collector registered for region", "region", region)
 	}
 
-	serverConfiguration := http.Config{
-		ListenAddress: configuration.ListenAddress,
-		MetricPath:    configuration.MetricPath,
-		TLSCertPath:   configuration.TLSCertPath,
-		TLSKeyPath:    configuration.TLSKeyPath,
+	mux := http.NewServeMux()
+	mux.Handle(configuration.MetricPath, promhttp.HandlerFor(prometheus.Gatherers{
+		prometheus.DefaultGatherer,
+		prometheus.GathererFunc(func() ([]*dto.MetricFamily, error) {
+			var metrics []*dto.MetricFamily
+			for _, registry := range registries {
+				mfs, err := registry.Gather()
+				if err != nil {
+					return nil, err
+				}
+				metrics = append(metrics, mfs...)
+			}
+			return metrics, nil
+		}),
+	}, promhttp.HandlerOpts{}))
+
+	server := &http.Server{
+		Addr:    configuration.ListenAddress,
+		Handler: mux,
 	}
 
-	server := http.New(*logger, serverConfiguration)
-
-	err = server.Start()
+	logger.Info("Starting web server", "address", configuration.ListenAddress)
+	err = server.ListenAndServe()
 	if err != nil {
 		logger.Error("web server error", "reason", err)
 		os.Exit(httpErrorExitCode)
@@ -115,8 +138,7 @@ func NewRootCommand() (*cobra.Command, error) {
 			var c exporterConfig
 			err := viper.Unmarshal(&c)
 			if err != nil {
-				fmt.Println("ERROR: Unable to decode configuration, %w", err)
-
+				fmt.Println("ERROR: Unable to decode configuration:", err)
 				return
 			}
 			run(c)
@@ -141,7 +163,7 @@ func NewRootCommand() (*cobra.Command, error) {
 	cmd.Flags().BoolP("collect-maintenances", "", true, "Collect AWS instances maintenances")
 	cmd.Flags().BoolP("collect-quotas", "", true, "Collect AWS RDS quotas")
 	cmd.Flags().BoolP("collect-usages", "", true, "Collect AWS RDS usages")
-	cmd.Flags().StringSliceP("aws-regions", "", []string{"us-east-1"}, "AWS regions to fetch metrics from")
+	cmd.Flags().StringSliceP("aws-regions", "", []string{"ap-northeast-2"}, "AWS regions to fetch metrics from")
 
 	err := viper.BindPFlag("debug", cmd.Flags().Lookup("debug"))
 	if err != nil {
@@ -218,24 +240,19 @@ func NewRootCommand() (*cobra.Command, error) {
 		return cmd, fmt.Errorf("failed to bind 'collect-maintenances' parameter: %w", err)
 	}
 
-	err = viper.BindPFlag("aws-regions", cmd.Flags().Lookup("aws-regions"))
-	if err != nil {
-		return cmd, fmt.Errorf("failed to bind 'aws-regions' parameter: %w", err)
-	}
-
 	return cmd, nil
 }
 
 func Execute() {
 	cmd, err := NewRootCommand()
 	if err != nil {
-		fmt.Println("ERROR: Failed to load configuration: %w", err)
+		fmt.Println("ERROR: Failed to load configuration:", err)
 		os.Exit(configErrorExitCode)
 	}
 
 	err = cmd.Execute()
 	if err != nil {
-		fmt.Println("ERROR: Failed to execute exporter: %w", err)
+		fmt.Println("ERROR: Failed to execute exporter:", err)
 		os.Exit(exporterErrorExitCode)
 	}
 }
