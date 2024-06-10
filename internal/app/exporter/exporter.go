@@ -529,11 +529,10 @@ func (c *RdsCollector) Collect(ch chan<- prometheus.Metric) {
 	if err != nil {
 		c.logger.Error(fmt.Sprintf("can't scrape metrics: %s", err))
 		// Mark exporter as down
-		ch <- prometheus.MustNewConstMetric(c.up, prometheus.CounterValue, exporterDownStatusCode)
-
+		ch <- prometheus.MustNewConstMetric(c.up, prometheus.GaugeValue, exporterDownStatusCode, c.awsRegion)
 		return
 	}
-	ch <- prometheus.MustNewConstMetric(c.up, prometheus.CounterValue, exporterUpStatusCode)
+	ch <- prometheus.MustNewConstMetric(c.up, prometheus.GaugeValue, exporterUpStatusCode, c.awsRegion)
 
 	// RDS metrics
 	ch <- prometheus.MustNewConstMetric(c.apiCall, prometheus.CounterValue, c.counters.RDSAPIcalls, c.awsAccountID, c.awsRegion, "rds")
