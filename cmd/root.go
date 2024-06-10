@@ -275,7 +275,7 @@ func initConfig() {
 
 	regions := viper.GetStringSlice("aws-regions")
 	if len(regions) == 0 {
-		regions = []string{"us-east-1"} // 기본값 설정
+		regions = []string{"ap-northeast-2"} // 기본값 설정
 	}
 	viper.Set("aws-regions", regions)
 }
