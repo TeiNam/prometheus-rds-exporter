@@ -126,11 +126,11 @@ func NewCollector(logger slog.Logger, collectorConfiguration Configuration, awsA
 
 		exporterBuildInformation: prometheus.NewDesc("rds_exporter_build_info",
 			"A metric with constant '1' value labeled by version from which exporter was built",
-			[]string{"version", "commit_sha", "build_date"}, nil,
+			[]string{"version", "commit_sha", "build_date", "aws_region"}, nil,
 		),
 		errors: prometheus.NewDesc("rds_exporter_errors_total",
 			"Total number of errors encountered by the exporter",
-			[]string{}, nil,
+			[]string{"aws_region"}, nil,
 		),
 		allocatedStorage: prometheus.NewDesc("rds_allocated_storage_bytes",
 			"Allocated storage",
@@ -206,7 +206,7 @@ func NewCollector(logger slog.Logger, collectorConfiguration Configuration, awsA
 		),
 		up: prometheus.NewDesc("up",
 			"Was the last scrape of RDS successful",
-			nil, nil,
+			[]string{"aws_region"}, nil,
 		),
 		swapUsage: prometheus.NewDesc("rds_swap_usage_bytes",
 			"Amount of swap space used on the DB instance. This metric is not available for SQL Server",
@@ -521,8 +521,8 @@ func (c *RdsCollector) getInstanceTagLabels(dbidentifier string, instance rds.Rd
 }
 
 func (c *RdsCollector) Collect(ch chan<- prometheus.Metric) {
-	ch <- prometheus.MustNewConstMetric(c.exporterBuildInformation, prometheus.GaugeValue, 1, build.Version, build.CommitSHA, build.Date)
-	ch <- prometheus.MustNewConstMetric(c.errors, prometheus.CounterValue, c.counters.Errors)
+	ch <- prometheus.MustNewConstMetric(c.exporterBuildInformation, prometheus.GaugeValue, 1, build.Version, build.CommitSHA, build.Date, c.awsRegion)
+	ch <- prometheus.MustNewConstMetric(c.errors, prometheus.CounterValue, c.counters.Errors, c.awsRegion)
 
 	// Get all metrics
 	err := c.fetchMetrics()

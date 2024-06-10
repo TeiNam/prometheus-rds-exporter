@@ -19,6 +19,7 @@ import (
 	dto "github.com/prometheus/client_model/go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"log/slog"
 )
 
 const (
@@ -47,6 +48,14 @@ type exporterConfig struct {
 	CollectQuotas          bool     `mapstructure:"collect-quotas"`
 	CollectUsages          bool     `mapstructure:"collect-usages"`
 	AWSRegions             []string `mapstructure:"aws-regions"`
+}
+
+type loggerWrapper struct {
+	logger *slog.Logger
+}
+
+func (lw *loggerWrapper) Println(v ...interface{}) {
+	lw.logger.Info(fmt.Sprintln(v...))
 }
 
 func run(configuration exporterConfig) {
@@ -92,7 +101,11 @@ func run(configuration exporterConfig) {
 		collector := exporter.NewCollector(*logger, collectorConfiguration, awsAccountID, awsRegion, rdsClient, ec2Client, cloudWatchClient, servicequotasClient)
 
 		registry := prometheus.NewRegistry()
-		registry.MustRegister(collector)
+		err = registry.Register(collector)
+		if err != nil {
+			logger.Error("Failed to register collector", "region", region, "reason", err)
+			continue
+		}
 		registries[region] = registry
 
 		logger.Info("Collector registered for region", "region", region)
@@ -103,16 +116,20 @@ func run(configuration exporterConfig) {
 		prometheus.DefaultGatherer,
 		prometheus.GathererFunc(func() ([]*dto.MetricFamily, error) {
 			var metrics []*dto.MetricFamily
-			for _, registry := range registries {
+			for region, registry := range registries {
 				mfs, err := registry.Gather()
 				if err != nil {
-					return nil, err
+					logger.Error("Failed to gather metrics", "region", region, "reason", err)
+					continue
 				}
 				metrics = append(metrics, mfs...)
 			}
 			return metrics, nil
 		}),
-	}, promhttp.HandlerOpts{}))
+	}, promhttp.HandlerOpts{
+		ErrorLog:      &loggerWrapper{logger},
+		ErrorHandling: promhttp.ContinueOnError,
+	}))
 
 	server := &http.Server{
 		Addr:    configuration.ListenAddress,
